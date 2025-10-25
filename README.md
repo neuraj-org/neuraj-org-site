@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🧠 Neuraj — Adaptive Intelligence
 
 > **Building adaptive intelligence — from your personal AI → to systems that scale.**
@@ -296,7 +295,7 @@ Before going live, verify:
 
 For questions or issues related to this website:
 
-**Email:** contact@neuraj.org  
+**Email:** rajesh@neuraj.org  
 **Governance:** governance@neuraj.org  
 **Privacy:** privacy@neuraj.org  
 **Legal:** legal@neuraj.org
@@ -329,4 +328,3 @@ For questions or issues related to this website:
 ---
 
 **Neuraj is not built — it's remembered. A living system that learns to belong.**
->>>>>>> a668064 (feat(site): Neuraj website v0.1 (institutional landing + legal pages))
