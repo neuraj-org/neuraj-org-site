@@ -1,0 +1,40 @@
+version: '1.1'
+model_name: GPT-4o
+items:
+- id: ORG-FND-001
+  section: 4️⃣ Governance Model
+  type: clarity
+  severity: SHOULD
+  summary: Clarify cadence of Maker-Checker review cycles
+  detail: The frequency of micro-reviews, Red-Team loops, and patching is listed,
+    but it's not explicit which events trigger a new blueprint version or MyriadEye
+    re-review.
+  recommendation: Specify events or thresholds that mandate blueprint updates or trigger
+    new MyriadEye rounds.
+- id: ORG-FND-002
+  section: 5️⃣ Contracts & Interfaces
+  type: improvement
+  severity: SHOULD
+  summary: Data contract schemas lack detailed validation rules
+  detail: Field types and constraints for key tables are unspecified, risking ambiguity
+    during implementation.
+  recommendation: Include a separate annex or markdown table defining data types,
+    constraints, and validation rules for each contract schema.
+- id: ORG-FND-003
+  section: 6️⃣ Security & RBAC
+  type: missing
+  severity: MUST
+  summary: No mention of rate limiting or DoS protection
+  detail: While RBAC and kill-switches are well defined, nothing is mentioned about
+    API throttling or rate-based abuse prevention.
+  recommendation: Add a `rate_limit` policy block in API contracts with default values
+    and override rules.
+- id: ORG-FND-004
+  section: 11️⃣ Ethical & Compliance Framework
+  type: conflict
+  severity: MUST
+  summary: Conflict between 'no PII' and operational need for user-specific telemetry
+  detail: Blueprint disallows any PII storage but also mentions audit trails and telemetry
+    that might conflict unless anonymization is explicitly detailed.
+  recommendation: Clarify anonymization pipeline and acceptable hash/token policies
+    for compliant telemetry.

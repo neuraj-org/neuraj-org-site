@@ -1,0 +1,470 @@
+version: R1-Merged
+total_unique_findings: 39
+items:
+- id: ORG-FND-001
+  section: 5.1 API Contract
+  type: clarity
+  severity: SHOULD
+  summary: API contract lacks explicit error response schema
+  detail: While the response_schema defines success cases, error responses (status
+    codes, error object structure, retry policies) are not documented. This creates
+    ambiguity for error handling in Neuraj AI and NeurOS implementations.
+  recommendation: 'Add error_response_schema with standard fields: error_code, message,
+    details, trace_id, retry_after'
+  origin:
+  - Claude
+- id: ORG-FND-002
+  section: 5.2 Data Contracts
+  type: improvement
+  severity: SHOULD
+  summary: Missing explicit foreign key relationships in data contracts
+  detail: Tables reference each other (e.g., tasks.module_id, artifacts.task_id) but
+    FK constraints and cascade behaviors are not documented. This affects data integrity
+    rules.
+  recommendation: Document FK relationships and cascade rules (DELETE CASCADE vs RESTRICT)
+    for all table relationships
+  origin:
+  - Claude
+- id: ORG-FND-003
+  section: 6 Security & RBAC
+  type: security
+  severity: MUST
+  summary: Audit log integrity mechanism not specified
+  detail: governance_events and governance_log.json are mentioned as immutable, but
+    the technical mechanism ensuring immutability (write-once storage, cryptographic
+    chaining, etc.) is not defined.
+  recommendation: 'Specify immutability mechanism: either append-only file system,
+    WORM storage, or cryptographic hash chain with merkle tree'
+  origin:
+  - Claude
+- id: ORG-FND-004
+  section: 6 Security & RBAC
+  type: security
+  severity: SHOULD
+  summary: Missing session timeout and token rotation policies
+  detail: HMAC and mTLS are defined but session lifetime, token expiration, and rotation
+    frequency are not specified. This creates potential security gaps.
+  recommendation: 'Add explicit policies: HMAC token TTL (e.g., 1h), mTLS cert rotation
+    schedule (e.g., 90 days), session timeout (e.g., 24h idle)'
+  origin:
+  - Claude
+- id: ORG-FND-005
+  section: 7 Data & Knowledge Architecture
+  type: clarity
+  severity: SHOULD
+  summary: Vector store backup and recovery not addressed
+  detail: PostgreSQL has clear retention policy (hot/warm/cold), but vector store
+    backup, snapshot frequency, and recovery procedures are undefined.
+  recommendation: 'Define vector store backup policy: snapshot frequency, retention,
+    restore SLA, and failover procedure'
+  origin:
+  - Claude
+- id: ORG-FND-006
+  section: 8 Observability & Ops
+  type: improvement
+  severity: SHOULD
+  summary: Alert notification channels and escalation not defined
+  detail: Metrics and dashboards are well-defined, but alert routing (who gets notified,
+    how, and when) and escalation paths for P1/P2/P3 incidents are missing.
+  recommendation: 'Add alert_policies section: notification channels (Telegram, email),
+    escalation timers, on-call rotation'
+  origin:
+  - Claude
+- id: ORG-FND-007
+  section: 8 Observability & Ops
+  type: improvement
+  severity: COULD
+  summary: Missing distributed tracing implementation details
+  detail: trace_id (ULID/Snowflake) is mentioned but distributed tracing system (OpenTelemetry,
+    Jaeger, Zipkin) and trace propagation mechanism are not specified.
+  recommendation: Specify tracing backend and propagation headers (e.g., W3C Trace
+    Context or OpenTelemetry)
+  origin:
+  - Claude
+- id: ORG-FND-008
+  section: 9 Versioning & Compatibility
+  type: missing
+  severity: MUST
+  summary: Breaking change detection and migration procedure undefined
+  detail: Compatibility matrix exists but procedure for detecting breaking changes
+    in contracts and orchestrating cross-component upgrades is not documented.
+  recommendation: 'Add section: breaking_change_protocol with detection rules, migration
+    steps, rollback criteria, and coordination sequence'
+  origin:
+  - Claude
+- id: ORG-FND-009
+  section: 10 Workflows
+  type: clarity
+  severity: SHOULD
+  summary: Task timeout and stale task cleanup not specified
+  detail: Task lifecycle states are clear, but max execution time, timeout handling,
+    and cleanup of abandoned/stale tasks are undefined.
+  recommendation: 'Define task_timeout_policy: max_runtime per action type, timeout
+    behavior (fail vs extend), stale task TTL'
+  origin:
+  - Claude
+- id: ORG-FND-010
+  section: 11 Ethical & Compliance Framework
+  type: improvement
+  severity: SHOULD
+  summary: Data subject rights (GDPR-style) not addressed
+  detail: Privacy principle mentions no PII storage, but user rights (access, deletion,
+    portability) and compliance with data protection regulations are not covered.
+  recommendation: 'Add data_subject_rights section: right to access, right to deletion,
+    data portability procedures, even if minimal PII is stored'
+  origin:
+  - Claude
+- id: ORG-FND-011
+  section: 4 Governance Model
+  type: improvement
+  severity: SHOULD
+  summary: Conflict resolution mechanism missing
+  detail: Maker-Checker-Approver roles are clear, but what happens when Checker and
+    Maker disagree, or when Approver is unavailable, is not defined.
+  recommendation: 'Add conflict_resolution section: escalation path, tie-breaker rules,
+    fallback approver designation'
+  origin:
+  - Claude
+- id: ORG-FND-012
+  section: 5.1 API Contract
+  type: integration
+  severity: SHOULD
+  summary: Rate limiting per requester not specified
+  detail: Global rate limit (30 req/min per actor) exists, but per-module or per-action
+    limits are not defined. This could allow one module to starve others.
+  recommendation: 'Define hierarchical rate limits: global per-actor, per-module quotas,
+    per-action throttling'
+  origin:
+  - Claude
+- id: ORG-FND-013
+  section: 8 Observability & Ops
+  type: improvement
+  severity: COULD
+  summary: Cost tracking metrics absent
+  detail: Given zero-cost-first principle, tracking actual costs (API calls, compute
+    time, storage) would validate adherence and identify optimization opportunities.
+  recommendation: 'Add cost_observability: track API call counts, compute seconds,
+    storage GB, with budgets and alerts'
+  origin:
+  - Claude
+- id: ORG-FND-014
+  section: 10.2 Risky Action Flow
+  type: clarity
+  severity: SHOULD
+  summary: Quiz content and passing criteria not defined
+  detail: High-risk actions require quiz, but quiz format, content source, passing
+    score, and failure handling are unspecified.
+  recommendation: 'Define quiz_policy: question format, knowledge source, passing
+    threshold (e.g., 3/5 correct), max retry attempts'
+  origin:
+  - Claude
+- id: ORG-FND-015
+  section: Integration Context
+  type: integration
+  severity: SHOULD
+  summary: Circuit breaker pattern not mentioned
+  detail: With multiple service dependencies, circuit breakers for failing downstream
+    services (NeurOS API, Prometheus, DB) would improve resilience.
+  recommendation: 'Add circuit_breaker_policy: failure threshold, timeout, half-open
+    retry, per dependent service'
+  origin:
+  - Claude
+- id: ORG-FND-016
+  section: 7 Data & Knowledge Architecture
+  type: clarity
+  severity: COULD
+  summary: Data encryption at rest and in transit not explicitly stated
+  detail: HTTPS is mentioned, but encryption specifics for PostgreSQL data-at-rest,
+    vector store, and backup archives are not documented.
+  recommendation: 'Explicitly state encryption requirements: TLS 1.3 for transit,
+    AES-256 for data-at-rest, encrypted backups'
+  origin:
+  - Claude
+- id: ORG-FND-017
+  section: 12 Public Identity
+  type: improvement
+  severity: COULD
+  summary: Incident disclosure policy missing
+  detail: Public identity section covers mission and disclaimers but not how security
+    incidents or service disruptions will be communicated publicly.
+  recommendation: 'Add incident_disclosure_policy: what to disclose, timeline (e.g.,
+    72h), communication channel'
+  origin:
+  - Claude
+- id: ORG-FND-018
+  section: 4 Governance Model
+  type: improvement
+  severity: COULD
+  summary: Audit trail retention for governance decisions not specified
+  detail: Artifacts like approval.md and audit_index.json are mentioned but retention
+    period and archival process for governance decisions are unclear.
+  recommendation: 'Define governance_audit_retention: hot period (e.g., 24 months),
+    archive duration (e.g., 7 years), destruction policy'
+  origin:
+  - Claude
+- id: ORG-FND-019
+  section: 9 Versioning & Compatibility
+  type: improvement
+  severity: SHOULD
+  summary: Deprecation timeline for contract versions not defined
+  detail: Compatibility ranges exist, but how long old contract versions remain supported
+    and deprecation notice period are missing.
+  recommendation: 'Add deprecation_policy: minimum support window (e.g., 6 months),
+    deprecation notice period (e.g., 3 months advance), EOL process'
+  origin:
+  - Claude
+- id: ORG-FND-020
+  section: Overall Structure
+  type: improvement
+  severity: COULD
+  summary: Glossary could be expanded
+  detail: Glossary exists but some technical terms used throughout (ULID, Snowflake,
+    WORM, HMAC, mTLS) are not defined for non-technical stakeholders.
+  recommendation: Expand glossary with technical acronyms and security/ops terminology
+    for broader accessibility
+  origin:
+  - Claude
+- id: ORG-FND-001
+  section: 5.2 Data Contracts
+  type:
+  - conflict
+  - missing
+  severity: MUST
+  summary: The `tasks` table schema is incomplete and conflicts with Integration_Context.
+  detail: The blueprint's `tasks` table is missing `created_at`, `started_at`, and
+    `finished_at` columns. These are defined in `Integration_Context.yaml` and are
+    essential for logging, latency SLOs (P95), and auditability. The 'Constitution'
+    (blueprint) must be the source of truth and explicitly define these.
+  recommendation: Update the `tasks` table schema in Section 5.2 to include all necessary
+    timestamp and tracking columns as defined in the integration context.
+  origin:
+  - Gemini
+- id: ORG-FND-002
+  section: 6. Security & RBAC
+  type:
+  - clarity
+  - security
+  severity: SHOULD
+  summary: The `approve_high_risk` capability is ambiguous and potentially dilutes
+    human authority.
+  detail: The capability `Rajesh + Neuraj AI (co-sign)` conflicts with the 'Human-in-the-Loop'
+    principle ('Final authority always resides with the Approver'). It's unclear how
+    an AI 'co-signs'. This should be rephrased to clarify that Neuraj AI performs
+    a *mandatory review* or *provides a rationale* that Rajesh (the human) must then
+    *solely* approve.
+  recommendation: Change 'co-sign' to 'AI review required; final approval by Rajesh
+    only'. This maintains a clear line of authority.
+  origin:
+  - Gemini
+- id: ORG-FND-003
+  section: 10.2 Risky Action Flow
+  type:
+  - missing
+  - clarity
+  severity: SHOULD
+  summary: The actor responsible for `risk_tier_eval` is undefined.
+  detail: The flow begins with 'Request -> risk_tier_eval', but it's not stated *who*
+    or *what* performs this evaluation. Is it the proposer (Neuraj AI), the executor
+    (NeurOS), or a separate module? This is a critical governance gap.
+  recommendation: 'Explicitly define the actor for `risk_tier_eval`. Suggestion: ''Neuraj
+    AI proposes a risk_tier; NeurOS Lite validates it against guardrails before queuing
+    for approval.'''
+  origin:
+  - Gemini
+- id: ORG-FND-004
+  section: 7. Data & Knowledge Architecture
+  type:
+  - missing
+  - improvement
+  severity: SHOULD
+  summary: The update workflow for the 'Recall Layer' (Vector Store) is not defined.
+  detail: The blueprint defines the Recall Layer for Neuraj AI's memory, but it omits
+    the process for *updating* this memory. When a policy (like this blueprint) is
+    updated, what mechanism ensures the new knowledge is embedded and available for
+    RAG? This is a crucial part of the 'Knowledge Loop'.
+  recommendation: Add a subsection to Section 7 or Section 10 defining the workflow
+    for updating the Vector Store, likely triggered by a 'governance_event' or a successful
+    'edit_policies' action.
+  origin:
+  - Gemini
+- id: ORG-FND-005
+  section: 4. Governance Model
+  type:
+  - clarity
+  severity: COULD
+  summary: The 'Checker' role definition is ambiguous.
+  detail: The 'Checker' is defined as 'Validator AI / Peer'. 'Peer' is not defined.
+    Is this another human, or a different AI? This ambiguity weakens the 'Maker-Checker-Approver'
+    model. The `Integration_Context.yaml` does not clarify this 'Peer' role either.
+  recommendation: Clarify the 'Peer' role. If it's the Validator AI, remove 'Peer'.
+    If it's a human, define 'Peer Reviewer' explicitly in the table.
+  origin:
+  - Gemini
+- id: ORG-FND-006
+  section: 5.1 API Contract
+  type:
+  - clarity
+  - integration
+  severity: COULD
+  summary: HMAC Auth definition is missing 'timestamp' detail from Integration_Context.
+  detail: 'The blueprint lists `Auth: HMAC-SHA256 (Stage)`. The `Integration_Context.yaml`
+    provides more crucial detail: ''HMAC-SHA256 signed requests + timestamp''. The
+    timestamp is vital for preventing replay attacks. The blueprint, as the source
+    of truth, should include this level of detail.'
+  recommendation: Update the Auth description to 'HMAC-SHA256 (signed requests + timestamp
+    nonce)'.
+  origin:
+  - Gemini
+- id: ORG-FND-007
+  section: 6. Security & RBAC
+  type:
+  - missing
+  - clarity
+  severity: SHOULD
+  summary: Autonomous trigger conditions for NeurOS `kill_switch` are not defined.
+  detail: Section 6 grants `kill_switch` capability to 'Rajesh + NeurOS Lite'. It's
+    clear when Rajesh would use it, but not when NeurOS Lite is *permitted* to use
+    it autonomously. This must be explicitly defined.
+  recommendation: Add a note under the RBAC table specifying the *exact* conditions
+    for an autonomous NeurOS kill-switch (e.g., 'Triggered automatically on P1-level
+    guardrail breach, such as Daily Loss Cap').
+  origin:
+  - Gemini
+- id: ORG-FND-008
+  section: 8. Observability & Ops
+  type:
+  - improvement
+  - security
+  severity: COULD
+  summary: P1 Incident Response action 'rotate keys' may be too aggressive for an
+    automatic first step.
+  detail: The P1 action includes 'rotate keys' alongside 'Kill-switch' and 'rollback'.
+    Automatically rotating keys on *every* P1 event could cause cascading failures
+    or lock out human responders. Key rotation is typically a deliberate, human-supervised
+    action *after* containment.
+  recommendation: 'Amend the P1 action to: ''Kill-switch, rollback image, alert, schedule
+    key rotation, RCA < 24 h''. This separates immediate containment (kill-switch)
+    from recovery (key rotation).'
+  origin:
+  - Gemini
+- id: ORG-FND-001
+  section: 5️⃣ Contracts & Interfaces
+  type: clarity
+  severity: SHOULD
+  summary: API endpoints lack detailed request/response schemas
+  detail: Core endpoints are listed, but without explicit schemas for params or responses,
+    implementation ambiguity could arise in Neuraj AI or NeurOS integration.
+  recommendation: Reference or inline basic JSON schemas from Integration_Context_v1.0.yaml
+    to ensure testability.
+  origin:
+  - Grok
+- id: ORG-FND-002
+  section: 6️⃣ Security & RBAC
+  type: security
+  severity: MUST
+  summary: RBAC for 'approve_high_risk' allows Neuraj AI co-sign, conflicting with
+    human-only approver
+  detail: Governance model emphasizes human-in-the-loop, but RBAC permits Neuraj AI
+    to co-sign high-risk approvals, potentially bypassing full human control.
+  recommendation: Revise to require Rajesh final sign-off only; Neuraj AI can recommend
+    but not co-approve.
+  origin:
+  - Grok
+- id: ORG-FND-003
+  section: 7️⃣ Data & Knowledge Architecture
+  type: missing
+  severity: SHOULD
+  summary: No backup or disaster recovery policy for data layers
+  detail: Retention policies are defined, but lack procedures for backups, restores,
+    or handling data loss in PostgreSQL, Prometheus, or Vector Store.
+  recommendation: Add a subsection on backup cadence (e.g., daily snapshots) and recovery
+    SLAs.
+  origin:
+  - Grok
+- id: ORG-FND-004
+  section: 8️⃣ Observability & Ops
+  type: improvement
+  severity: COULD
+  summary: Incident severity levels lack escalation timelines
+  detail: P1 requires RCA <24h, but no explicit escalation paths or notification chains
+    for P2/P3.
+  recommendation: 'Expand table with ''Escalation'' column, e.g., P1: immediate Telegram
+    to Rajesh.'
+  origin:
+  - Grok
+- id: ORG-FND-005
+  section: 11️⃣ Ethical & Compliance Framework
+  type: integration
+  severity: SHOULD
+  summary: Ethics enforcement lacks ties to observability metrics
+  detail: Principles like bias mitigation are stated, but not linked to Prometheus
+    metrics or Grafana dashboards for monitoring.
+  recommendation: Add metrics like 'bias_audit_failures_total' to Section 8 for traceability.
+  origin:
+  - Grok
+- id: ORG-FND-006
+  section: 12️⃣ Public Identity
+  type: security
+  severity: COULD
+  summary: Website hosting lacks security specifications
+  detail: Contabo VPS and Google Domains are mentioned, but no HTTPS enforcement,
+    WAF, or vulnerability scanning policies.
+  recommendation: Include basic security requirements, e.g., mandatory TLS 1.3+ and
+    quarterly scans.
+  origin:
+  - Grok
+- id: ORG-FND-007
+  section: 13️⃣ Success Criteria
+  type: conflict
+  severity: COULD
+  summary: Circular reference to MyriadEye Review in criteria
+  detail: Success includes MyriadEye score ≥4.0, but this blueprint is the subject
+    of the review, creating potential self-referential loop.
+  recommendation: Clarify as post-review target for v1.0.R1 acceptance.
+  origin:
+  - Grok
+- id: ORG-FND-001
+  section: 4️⃣ Governance Model
+  type: clarity
+  severity: SHOULD
+  summary: Clarify cadence of Maker-Checker review cycles
+  detail: The frequency of micro-reviews, Red-Team loops, and patching is listed,
+    but it's not explicit which events trigger a new blueprint version or MyriadEye
+    re-review.
+  recommendation: Specify events or thresholds that mandate blueprint updates or trigger
+    new MyriadEye rounds.
+  origin:
+  - ChatGPT4
+- id: ORG-FND-002
+  section: 5️⃣ Contracts & Interfaces
+  type: improvement
+  severity: SHOULD
+  summary: Data contract schemas lack detailed validation rules
+  detail: Field types and constraints for key tables are unspecified, risking ambiguity
+    during implementation.
+  recommendation: Include a separate annex or markdown table defining data types,
+    constraints, and validation rules for each contract schema.
+  origin:
+  - ChatGPT4
+- id: ORG-FND-003
+  section: 6️⃣ Security & RBAC
+  type: missing
+  severity: MUST
+  summary: No mention of rate limiting or DoS protection
+  detail: While RBAC and kill-switches are well defined, nothing is mentioned about
+    API throttling or rate-based abuse prevention.
+  recommendation: Add a `rate_limit` policy block in API contracts with default values
+    and override rules.
+  origin:
+  - ChatGPT4
+- id: ORG-FND-004
+  section: 11️⃣ Ethical & Compliance Framework
+  type: conflict
+  severity: MUST
+  summary: Conflict between 'no PII' and operational need for user-specific telemetry
+  detail: Blueprint disallows any PII storage but also mentions audit trails and telemetry
+    that might conflict unless anonymization is explicitly detailed.
+  recommendation: Clarify anonymization pipeline and acceptable hash/token policies
+    for compliant telemetry.
+  origin:
+  - ChatGPT4

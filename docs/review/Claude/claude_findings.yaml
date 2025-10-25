@@ -1,0 +1,162 @@
+version: 1.1
+model_name: "Claude Sonnet 4.5"
+items:
+  - id: ORG-FND-001
+    section: "5.1 API Contract"
+    type: "clarity"
+    severity: "SHOULD"
+    summary: "API contract lacks explicit error response schema"
+    detail: "While the response_schema defines success cases, error responses (status codes, error object structure, retry policies) are not documented. This creates ambiguity for error handling in Neuraj AI and NeurOS implementations."
+    recommendation: "Add error_response_schema with standard fields: error_code, message, details, trace_id, retry_after"
+
+  - id: ORG-FND-002
+    section: "5.2 Data Contracts"
+    type: "improvement"
+    severity: "SHOULD"
+    summary: "Missing explicit foreign key relationships in data contracts"
+    detail: "Tables reference each other (e.g., tasks.module_id, artifacts.task_id) but FK constraints and cascade behaviors are not documented. This affects data integrity rules."
+    recommendation: "Document FK relationships and cascade rules (DELETE CASCADE vs RESTRICT) for all table relationships"
+
+  - id: ORG-FND-003
+    section: "6 Security & RBAC"
+    type: "security"
+    severity: "MUST"
+    summary: "Audit log integrity mechanism not specified"
+    detail: "governance_events and governance_log.json are mentioned as immutable, but the technical mechanism ensuring immutability (write-once storage, cryptographic chaining, etc.) is not defined."
+    recommendation: "Specify immutability mechanism: either append-only file system, WORM storage, or cryptographic hash chain with merkle tree"
+
+  - id: ORG-FND-004
+    section: "6 Security & RBAC"
+    type: "security"
+    severity: "SHOULD"
+    summary: "Missing session timeout and token rotation policies"
+    detail: "HMAC and mTLS are defined but session lifetime, token expiration, and rotation frequency are not specified. This creates potential security gaps."
+    recommendation: "Add explicit policies: HMAC token TTL (e.g., 1h), mTLS cert rotation schedule (e.g., 90 days), session timeout (e.g., 24h idle)"
+
+  - id: ORG-FND-005
+    section: "7 Data & Knowledge Architecture"
+    type: "clarity"
+    severity: "SHOULD"
+    summary: "Vector store backup and recovery not addressed"
+    detail: "PostgreSQL has clear retention policy (hot/warm/cold), but vector store backup, snapshot frequency, and recovery procedures are undefined."
+    recommendation: "Define vector store backup policy: snapshot frequency, retention, restore SLA, and failover procedure"
+
+  - id: ORG-FND-006
+    section: "8 Observability & Ops"
+    type: "improvement"
+    severity: "SHOULD"
+    summary: "Alert notification channels and escalation not defined"
+    detail: "Metrics and dashboards are well-defined, but alert routing (who gets notified, how, and when) and escalation paths for P1/P2/P3 incidents are missing."
+    recommendation: "Add alert_policies section: notification channels (Telegram, email), escalation timers, on-call rotation"
+
+  - id: ORG-FND-007
+    section: "8 Observability & Ops"
+    type: "improvement"
+    severity: "COULD"
+    summary: "Missing distributed tracing implementation details"
+    detail: "trace_id (ULID/Snowflake) is mentioned but distributed tracing system (OpenTelemetry, Jaeger, Zipkin) and trace propagation mechanism are not specified."
+    recommendation: "Specify tracing backend and propagation headers (e.g., W3C Trace Context or OpenTelemetry)"
+
+  - id: ORG-FND-008
+    section: "9 Versioning & Compatibility"
+    type: "missing"
+    severity: "MUST"
+    summary: "Breaking change detection and migration procedure undefined"
+    detail: "Compatibility matrix exists but procedure for detecting breaking changes in contracts and orchestrating cross-component upgrades is not documented."
+    recommendation: "Add section: breaking_change_protocol with detection rules, migration steps, rollback criteria, and coordination sequence"
+
+  - id: ORG-FND-009
+    section: "10 Workflows"
+    type: "clarity"
+    severity: "SHOULD"
+    summary: "Task timeout and stale task cleanup not specified"
+    detail: "Task lifecycle states are clear, but max execution time, timeout handling, and cleanup of abandoned/stale tasks are undefined."
+    recommendation: "Define task_timeout_policy: max_runtime per action type, timeout behavior (fail vs extend), stale task TTL"
+
+  - id: ORG-FND-010
+    section: "11 Ethical & Compliance Framework"
+    type: "improvement"
+    severity: "SHOULD"
+    summary: "Data subject rights (GDPR-style) not addressed"
+    detail: "Privacy principle mentions no PII storage, but user rights (access, deletion, portability) and compliance with data protection regulations are not covered."
+    recommendation: "Add data_subject_rights section: right to access, right to deletion, data portability procedures, even if minimal PII is stored"
+
+  - id: ORG-FND-011
+    section: "4 Governance Model"
+    type: "improvement"
+    severity: "SHOULD"
+    summary: "Conflict resolution mechanism missing"
+    detail: "Maker-Checker-Approver roles are clear, but what happens when Checker and Maker disagree, or when Approver is unavailable, is not defined."
+    recommendation: "Add conflict_resolution section: escalation path, tie-breaker rules, fallback approver designation"
+
+  - id: ORG-FND-012
+    section: "5.1 API Contract"
+    type: "integration"
+    severity: "SHOULD"
+    summary: "Rate limiting per requester not specified"
+    detail: "Global rate limit (30 req/min per actor) exists, but per-module or per-action limits are not defined. This could allow one module to starve others."
+    recommendation: "Define hierarchical rate limits: global per-actor, per-module quotas, per-action throttling"
+
+  - id: ORG-FND-013
+    section: "8 Observability & Ops"
+    type: "improvement"
+    severity: "COULD"
+    summary: "Cost tracking metrics absent"
+    detail: "Given zero-cost-first principle, tracking actual costs (API calls, compute time, storage) would validate adherence and identify optimization opportunities."
+    recommendation: "Add cost_observability: track API call counts, compute seconds, storage GB, with budgets and alerts"
+
+  - id: ORG-FND-014
+    section: "10.2 Risky Action Flow"
+    type: "clarity"
+    severity: "SHOULD"
+    summary: "Quiz content and passing criteria not defined"
+    detail: "High-risk actions require quiz, but quiz format, content source, passing score, and failure handling are unspecified."
+    recommendation: "Define quiz_policy: question format, knowledge source, passing threshold (e.g., 3/5 correct), max retry attempts"
+
+  - id: ORG-FND-015
+    section: "Integration Context"
+    type: "integration"
+    severity: "SHOULD"
+    summary: "Circuit breaker pattern not mentioned"
+    detail: "With multiple service dependencies, circuit breakers for failing downstream services (NeurOS API, Prometheus, DB) would improve resilience."
+    recommendation: "Add circuit_breaker_policy: failure threshold, timeout, half-open retry, per dependent service"
+
+  - id: ORG-FND-016
+    section: "7 Data & Knowledge Architecture"
+    type: "clarity"
+    severity: "COULD"
+    summary: "Data encryption at rest and in transit not explicitly stated"
+    detail: "HTTPS is mentioned, but encryption specifics for PostgreSQL data-at-rest, vector store, and backup archives are not documented."
+    recommendation: "Explicitly state encryption requirements: TLS 1.3 for transit, AES-256 for data-at-rest, encrypted backups"
+
+  - id: ORG-FND-017
+    section: "12 Public Identity"
+    type: "improvement"
+    severity: "COULD"
+    summary: "Incident disclosure policy missing"
+    detail: "Public identity section covers mission and disclaimers but not how security incidents or service disruptions will be communicated publicly."
+    recommendation: "Add incident_disclosure_policy: what to disclose, timeline (e.g., 72h), communication channel"
+
+  - id: ORG-FND-018
+    section: "4 Governance Model"
+    type: "improvement"
+    severity: "COULD"
+    summary: "Audit trail retention for governance decisions not specified"
+    detail: "Artifacts like approval.md and audit_index.json are mentioned but retention period and archival process for governance decisions are unclear."
+    recommendation: "Define governance_audit_retention: hot period (e.g., 24 months), archive duration (e.g., 7 years), destruction policy"
+
+  - id: ORG-FND-019
+    section: "9 Versioning & Compatibility"
+    type: "improvement"
+    severity: "SHOULD"
+    summary: "Deprecation timeline for contract versions not defined"
+    detail: "Compatibility ranges exist, but how long old contract versions remain supported and deprecation notice period are missing."
+    recommendation: "Add deprecation_policy: minimum support window (e.g., 6 months), deprecation notice period (e.g., 3 months advance), EOL process"
+
+  - id: ORG-FND-020
+    section: "Overall Structure"
+    type: "improvement"
+    severity: "COULD"
+    summary: "Glossary could be expanded"
+    detail: "Glossary exists but some technical terms used throughout (ULID, Snowflake, WORM, HMAC, mTLS) are not defined for non-technical stakeholders."
+    recommendation: "Expand glossary with technical acronyms and security/ops terminology for broader accessibility"

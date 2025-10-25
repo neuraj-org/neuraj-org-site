@@ -1,0 +1,14 @@
+scores.csv
+---
+category,score,justification
+Completeness,4,"Strong, but missing key process definitions like the Vector Store update workflow and the risk-tier evaluation actor."
+Internal Consistency,4,"Largely consistent, but the `tasks` table schema in the blueprint conflicts with the more complete version in `Integration_Context`."
+Contract Clarity,3,"The API contract is good, but the Data Contract for the `tasks` table is missing MUST-HAVE columns for SLOs and auditing."
+Data & Knowledge,4,"Excellent 3-layer separation. Held back from a 5 by the missing 'Recall Layer' update workflow, which is a key governance loop."
+Ops & SLOs,5,"Excellent. Clear, measurable, and realistic SLOs, rollback triggers, and incident response levels. This is a very strong section."
+Security & RBAC,4,"Good foundation, but the ambiguity of AI 'co-signing' high-risk tasks dilutes the 'Human-in-the-Loop' principle. Needs clarification."
+Governance,4,"Maker-Checker-Approver is solid. The ambiguity of the 'Checker' role and the missing 'risk_tier_eval' actor are minor weaknesses."
+Ethics & Compliance,5,"Comprehensive and clear. The inclusion of a quarterly Red-Team loop and mandatory disclaimers is robust."
+Feasibility & Cost,5,"The 'Zero-Cost-First' principle, combined with a stack of Postgres, Prometheus, and FAISS/Chroma, is highly realistic and feasible."
+Risk Management,4,"Good guardrails and incident plans. The undefined risk evaluation process and aggressive P1 key rotation are the only gaps."
+Integration Readiness,4,"Almost ready. The `tasks` schema (MUST-fix) is the only thing preventing NeurOS/AI from being built against this blueprint."

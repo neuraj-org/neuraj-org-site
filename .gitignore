@@ -1,0 +1,14 @@
+# Environment
+.venv/
+__pycache__/
+*.log
+*.tmp
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Credentials
+*.key
+*.env
+*.token

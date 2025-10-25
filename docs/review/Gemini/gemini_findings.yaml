@@ -1,0 +1,61 @@
+findings.yaml
+---
+version: 1.1
+model_name: "Gemini"
+items:
+  - id: ORG-FND-001
+    section: "5.2 Data Contracts"
+    type: ["conflict", "missing"]
+    severity: "MUST"
+    summary: "The `tasks` table schema is incomplete and conflicts with Integration_Context."
+    detail: "The blueprint's `tasks` table is missing `created_at`, `started_at`, and `finished_at` columns. These are defined in `Integration_Context.yaml` and are essential for logging, latency SLOs (P95), and auditability. The 'Constitution' (blueprint) must be the source of truth and explicitly define these."
+    recommendation: "Update the `tasks` table schema in Section 5.2 to include all necessary timestamp and tracking columns as defined in the integration context."
+  - id: ORG-FND-002
+    section: "6. Security & RBAC"
+    type: ["clarity", "security"]
+    severity: "SHOULD"
+    summary: "The `approve_high_risk` capability is ambiguous and potentially dilutes human authority."
+    detail: "The capability `Rajesh + Neuraj AI (co-sign)` conflicts with the 'Human-in-the-Loop' principle ('Final authority always resides with the Approver'). It's unclear how an AI 'co-signs'. This should be rephrased to clarify that Neuraj AI performs a *mandatory review* or *provides a rationale* that Rajesh (the human) must then *solely* approve."
+    recommendation: "Change 'co-sign' to 'AI review required; final approval by Rajesh only'. This maintains a clear line of authority."
+  - id: ORG-FND-003
+    section: "10.2 Risky Action Flow"
+    type: ["missing", "clarity"]
+    severity: "SHOULD"
+    summary: "The actor responsible for `risk_tier_eval` is undefined."
+    detail: "The flow begins with 'Request -> risk_tier_eval', but it's not stated *who* or *what* performs this evaluation. Is it the proposer (Neuraj AI), the executor (NeurOS), or a separate module? This is a critical governance gap."
+    recommendation: "Explicitly define the actor for `risk_tier_eval`. Suggestion: 'Neuraj AI proposes a risk_tier; NeurOS Lite validates it against guardrails before queuing for approval.'"
+  - id: ORG-FND-004
+    section: "7. Data & Knowledge Architecture"
+    type: ["missing", "improvement"]
+    severity: "SHOULD"
+    summary: "The update workflow for the 'Recall Layer' (Vector Store) is not defined."
+    detail: "The blueprint defines the Recall Layer for Neuraj AI's memory, but it omits the process for *updating* this memory. When a policy (like this blueprint) is updated, what mechanism ensures the new knowledge is embedded and available for RAG? This is a crucial part of the 'Knowledge Loop'."
+    recommendation: "Add a subsection to Section 7 or Section 10 defining the workflow for updating the Vector Store, likely triggered by a 'governance_event' or a successful 'edit_policies' action."
+  - id: ORG-FND-005
+    section: "4. Governance Model"
+    type: ["clarity"]
+    severity: "COULD"
+    summary: "The 'Checker' role definition is ambiguous."
+    detail: "The 'Checker' is defined as 'Validator AI / Peer'. 'Peer' is not defined. Is this another human, or a different AI? This ambiguity weakens the 'Maker-Checker-Approver' model. The `Integration_Context.yaml` does not clarify this 'Peer' role either."
+    recommendation: "Clarify the 'Peer' role. If it's the Validator AI, remove 'Peer'. If it's a human, define 'Peer Reviewer' explicitly in the table."
+  - id: ORG-FND-006
+    section: "5.1 API Contract"
+    type: ["clarity", "integration"]
+    severity: "COULD"
+    summary: "HMAC Auth definition is missing 'timestamp' detail from Integration_Context."
+    detail: "The blueprint lists `Auth: HMAC-SHA256 (Stage)`. The `Integration_Context.yaml` provides more crucial detail: 'HMAC-SHA256 signed requests + timestamp'. The timestamp is vital for preventing replay attacks. The blueprint, as the source of truth, should include this level of detail."
+    recommendation: "Update the Auth description to 'HMAC-SHA256 (signed requests + timestamp nonce)'."
+  - id: ORG-FND-007
+    section: "6. Security & RBAC"
+    type: ["missing", "clarity"]
+    severity: "SHOULD"
+    summary: "Autonomous trigger conditions for NeurOS `kill_switch` are not defined."
+    detail: "Section 6 grants `kill_switch` capability to 'Rajesh + NeurOS Lite'. It's clear when Rajesh would use it, but not when NeurOS Lite is *permitted* to use it autonomously. This must be explicitly defined."
+    recommendation: "Add a note under the RBAC table specifying the *exact* conditions for an autonomous NeurOS kill-switch (e.g., 'Triggered automatically on P1-level guardrail breach, such as Daily Loss Cap')."
+  - id: ORG-FND-008
+    section: "8. Observability & Ops"
+    type: ["improvement", "security"]
+    severity: "COULD"
+    summary: "P1 Incident Response action 'rotate keys' may be too aggressive for an automatic first step."
+    detail: "The P1 action includes 'rotate keys' alongside 'Kill-switch' and 'rollback'. Automatically rotating keys on *every* P1 event could cause cascading failures or lock out human responders. Key rotation is typically a deliberate, human-supervised action *after* containment."
+    recommendation: "Amend the P1 action to: 'Kill-switch, rollback image, alert, schedule key rotation, RCA < 24 h'. This separates immediate containment (kill-switch) from recovery (key rotation)."

@@ -1,0 +1,283 @@
+version: "1.0"
+generated_at: "2025-10-25T00:00:00Z"
+title: "Integration Context — Neuraj Organization · Neuraj AI · NeurOS Lite"
+description: >
+  Machine-readable map of roles, dependencies, contracts, governance bindings,
+  observability, and version sync across the three blueprints. This file is part
+  of the MyriadEye Review Package (Org Round #1).
+
+scope:
+  review_round: "MyriadEye #1 — Organization Only"
+  notes: >
+    This context covers the whole ecosystem so reviewers understand integration,
+    but ONLY the Neuraj Organization blueprint is in-scope for this round.
+    Neuraj AI and NeurOS Lite will be reviewed later, against the contracts
+    and policies defined by the Organization layer.
+
+actors:
+  human:
+    id: "rajesh"
+    roles: ["CEO", "Approver", "PolicyOwner", "KillSwitch"]
+  systems:
+    - id: "neuraj_organization"
+      kind: "org_hq"
+      description: "Institutional backbone: policies, contracts, data schemas, governance."
+    - id: "neuraj_ai"
+      kind: "brain"
+      description: "Reasoning/orchestration LLM service. Plans, explains, cites."
+    - id: "neuros_lite"
+      kind: "executor"
+      description: "Operational agent. Builds, tests, executes with guardrails."
+    - id: "modules/*"
+      kind: "department_skill"
+      description: "Executable departments managed by NeurOS (e.g., scalping_pilot, profit_trailer)."
+
+hierarchy:
+  chain_of_command:
+    - "rajesh -> neuraj_ai -> neuros_lite -> modules/*"
+  separation_of_powers:
+    brain: "Thinks/Plans/Explains. Cannot execute high-risk actions."
+    executor: "Executes/Enforces/Logs. Cannot alter policies or bypass guardrails."
+    org: "Owns truth, contracts, governance, compatibility."
+
+contracts:
+  api_contract:
+    id: "CONTRACT"
+    version: "1.0.0"
+    transport: ["HTTP/REST"]
+    auth:
+      dev: "none (local)"
+      stage: "HMAC-SHA256 signed requests + timestamp"
+      prod_lite: "mTLS + HMAC (defense in depth)"
+    endpoints:
+      - method: "POST"
+        path: "/v1/tasks/run"
+        desc: "Run an existing skill/action"
+      - method: "POST"
+        path: "/v1/modules/build"
+        desc: "Scaffold a new department (sandbox)"
+      - method: "GET"
+        path: "/v1/tasks/{task_id}/status"
+        desc: "Check task progress"
+      - method: "GET"
+        path: "/v1/registry"
+        desc: "List registered skills/modules"
+      - method: "GET"
+        path: "/v1/health"
+        desc: "Liveness/health probe"
+    request_schema:
+      task_id: "string | auto"
+      requester: "enum: [neuraj_ai]"
+      action: "enum: [run, build, test]"
+      module: "string (e.g., scalping_pilot, profit_trailer)"
+      params: "object (free-form, validated by module)"
+      governance:
+        risk_level: "enum: [low, med, high]"
+        approved_by: "string (human id)"
+        notes: "string"
+    response_schema:
+      task_id: "string"
+      status: "enum: [queued, running, needs_approval, blocked, done, error]"
+      artifacts: "array of {type, path_or_ref, sha256}"
+      metrics_ref: "map of labels (e.g., prom_labels.task_id)"
+      log_ref: "file/line reference (e.g., governance_log.json#L120)"
+      message: "human summary string"
+  data_contracts:
+    postgres_tables:
+      modules: ["id", "name", "version", "status", "owner", "created_at"]
+      tasks: ["id", "module_id", "action", "params_json", "created_at", "started_at", "finished_at", "status", "requester", "approver"]
+      artifacts: ["id", "task_id", "type", "path_or_ref", "sha256", "created_at"]
+      governance_events: ["id", "actor", "kind", "message", "task_id", "created_at", "sha256"]
+      kpis: ["id", "domain", "name", "value", "unit", "as_of", "source_sha"]
+    vector_store:
+      engine: "FAISS|Chroma"
+      purpose: "Neuraj AI recall across Org docs, KPIs snapshots, rationales"
+      metadata_keys: ["source_path", "sha", "section", "timestamp", "kpi_id?"]
+    observability:
+      prometheus_series:
+        - "nos_task_success_total{task_id, module, action}"
+        - "nos_task_error_total{task_id, module, action, error_kind}"
+        - "nos_task_latency_seconds_bucket{module, action, le}"
+        - "guardrail_violations_total{module, rule}"
+      grafana_dashboards:
+        - "org_overview.json"
+        - "executor_health.json"
+        - "guardrails.json"
+        - "kpis_overview.json"
+
+dependencies:
+  neuraj_organization:
+    owns: ["contracts", "governance_policies", "integration_matrix", "data_schemas", "slo_standards", "public_identity"]
+    exposes:
+      - "contracts/CONTRACT-1.0.0 (OpenAPI + JSON schemas)"
+      - "policies/*"
+      - "dashboards/*"
+    consumes: []
+  neuraj_ai:
+    consumes: ["contracts.CONTRACT-1.0.0", "policies/*", "db.readonly_views", "vector_store.read", "prometheus.read"]
+    exposes: ["plans", "rationales_with_citations", "neuros_client.run_task"]
+    notes: "Neuraj AI never writes to production DB; only reads via views or NOS data API."
+  neuros_lite:
+    consumes: ["contracts.CONTRACT-1.0.0", "policies/*"]
+    exposes: ["api:/v1/*", "prometheus_metrics", "artifacts", "governance_events"]
+    writes: ["postgres.tables:*", "markdown.audit", "json.audit"]
+    manages: ["modules/*"]
+
+environments:
+  - name: "DEV"
+    secrets: "none (.env local only)"
+    data: "synthetic"
+    policies: "all guardrails active"
+  - name: "STAGE"
+    secrets: "test keys"
+    data: "read-only mirrors"
+    constraints: "no live execution; simulation/replay only"
+  - name: "PROD"
+    secrets: "real keys in vault"
+    constraints: "gated by approvals, canary + rollback"
+
+security:
+  rbac:
+    capabilities:
+      read_policies: ["rajesh", "neuraj_ai", "neuros_lite"]
+      propose_tasks: ["rajesh", "neuraj_ai"]
+      execute_tasks: ["neuros_lite"]
+      approve_high_risk: ["rajesh", "neuraj_ai"]  # co-sign
+      edit_policies: ["rajesh", "org_policy_pr"]
+      kill_switch: ["rajesh", "neuros_lite"]
+  authn_authz:
+    human_app: ["DEV: local", "LATER: OAuth2"]
+    service_to_service:
+      stage: "HMAC-SHA256 (timestamp window ±120s)"
+      prod_lite: "mTLS + HMAC"
+    perimeter:
+      https_only: true
+      ssh:
+        key_only: true
+        ip_allowlist: true
+      rate_limits:
+        neuros_api: "30 req/min per actor"
+      cors_allow_origin: ["neuraj_app_url"]
+  guardrails:
+    hard:
+      - "market_restart_lock + 30min_cooldown + quiz"
+      - "daily_loss_cap -> halt_trading_and_require_human_unlock"
+      - "max_trades_per_day limit"
+      - "credential_change -> dual_approval_required"
+    soft:
+      - "prod_deploy -> needs_approval + rationale"
+      - "risk_param_change -> needs_approval + last_3_incidents"
+  logging_audit:
+    trace_id: "ULID/Snowflake per task"
+    immutable_logs: ["governance_log.json (append-only)", "daily_brief_YYYY-MM-DD.md"]
+    clock_sync: "NTP required"
+    evidence_pack: ["release_notes", "test_reports", "grafana_screens", "contract_versions", "sha_index"]
+
+ops_model:
+  branching: ["main", "feature/*", "release/X.Y", "hotfix/*"]
+  versioning:
+    nai: "NAI MAJOR.MINOR.PATCH"
+    nos: "NOS MAJOR.MINOR.PATCH"
+    contract: "CONTRACT vX.Y.Z"
+    modules: "MOD.<name> MAJOR.MINOR.PATCH"
+  compatibility_matrix:
+    file: "governance/integration_matrix.yaml"
+    example:
+      contract_v1_0_0:
+        nai: ">=1.0,<2.0"
+        nos: ">=1.0,<2.0"
+  cadence_riyadh:
+    daily:
+      - "07:30 STAGE daily_brief -> Telegram"
+      - "20:30 micro-changes window"
+    weekend:
+      - "Fri: contracts + tiny NOS slice (60–90m)"
+      - "Sat: STAGE integration + governance review (60m)"
+    monthly:
+      - "red_team_day + incident_drill"
+  canary_rollback:
+    canary_percent: 10
+    auto_rollback_triggers:
+      - "error_rate_threshold_breach"
+      - "guardrail_violation_detected"
+      - "p95_latency_breach > 15m"
+  testing_gates:
+    neuraj_ai:
+      - "prompt_eval: hallucination<=2%, citation_match>=98%, score>=0.85"
+      - "adapter_contract_check"
+    neuros_lite:
+      - "api_contract_diff_check"
+      - "unit+integration_tests (no live side-effects)"
+      - "sandbox_job_runner tests"
+    modules:
+      - "config_lint + simulation_replay (STAGE only)"
+      - "no live endpoints during tests"
+
+slo_standards:
+  nos_api_availability_7d: ">=99.5%"
+  task_success_rate: ">=98%"
+  latency_p95_seconds:
+    read_tasks: "<=3"
+    build_tasks: "<=30"
+  guardrail_violations_prod: "0"
+  nai_eval:
+    score_min: ">=0.85"
+    hallucination_max: "<=0.02"
+    citation_match_min: ">=0.98"
+
+data_knowledge:
+  truth_layer: "PostgreSQL (state: tasks, artifacts, kpis, governance_events)"
+  performance_layer: "Prometheus (metrics) + Grafana (dashboards)"
+  recall_layer: "Vector Store (RAG for Neuraj AI) with SHA-cited provenance"
+  retention:
+    hot_days: 60
+    warm_months: 12
+    cold_archive: "tar + index"
+  access:
+    neuraj_ai: "read-only views or NOS data API"
+    neuros_lite: "read/write per table ownership"
+  kpi_views:
+    - "vw_latest_kpis(domain)"
+    - "vw_task_history(module)"
+    - "vw_guardrail_violations(last_n_days)"
+
+workflows:
+  task_lifecycle:
+    states: ["queued", "running", "needs_approval", "blocked", "done", "error"]
+    notes: "NeurOS maps DB 'tasks.status' 1:1 with API 'status'."
+  risky_action_flow:
+    steps:
+      - "request -> risk_tier_eval"
+      - "if high -> needs_approval + quiz"
+      - "on approval -> execute"
+      - "on reject -> cancelled + audit_event"
+  daily_brief_flow:
+    steps:
+      - "07:30 cron -> NOS collects KPIs -> renders markdown -> saves artifact -> Telegram notify -> Grafana link"
+  incident_response:
+    p1:
+      - "Kill switch (NOS) -> rotate exec key -> rollback image -> Telegram alert -> RCA < 24h"
+    p2:
+      - "Throttle -> canary rollback -> ticket -> next window fix"
+    p3:
+      - "Log -> schedule"
+
+public_identity:
+  website: "neuraj.org (static: Mission/Values/Disclaimer; Contabo VPS; Google Domains DNS)"
+  social:
+    twitter:
+      handle: "Neuraj"
+      tone: "AI voice, educational (#NeurajNotes)"
+    linkedin:
+      page: "Neuraj Organization"
+      tone: "Professional milestones & case studies"
+  compliance: "Educational only, no investment advice, no performance claims."
+
+glossary:
+  brain: "Neuraj AI — reasoning/orchestration"
+  executor: "NeurOS Lite — operations/guardrails"
+  contract: "Shared API & data schemas defined by Org"
+  modules: "Departments executed by NeurOS"
+  MyriadEye: "Parallel multi-LLM review protocol"
+  RAG: "Retrieval-Augmented Generation with provenance citations"
+
