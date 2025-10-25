@@ -1,0 +1,13 @@
+# Neuraj Organization — robots.txt
+# Last Updated: October 23, 2025
+
+# Allow all search engines to crawl the entire site
+User-agent: *
+Allow: /
+
+# Disallow crawling of placeholder/development files (if any)
+Disallow: /dev/
+Disallow: /temp/
+
+# Sitemap location (update with your actual domain when deployed)
+Sitemap: https://neuraj.org/sitemap.xml
