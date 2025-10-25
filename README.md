@@ -327,4 +327,8 @@ For questions or issues related to this website:
 
 ---
 
+<<<<<<< HEAD
 **Neuraj is not built — it's remembered. A living system that learns to belong.**
+=======
+**Neuraj is not built — it's remembered. A living system that learns to belong.**
+>>>>>>> 2cc44ccd3264a20ce68018b59bd3aac3eec21c4f
